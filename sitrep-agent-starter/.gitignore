@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+
+# Ngrok and Local Temp files
+ngrok.zip
+ngrok-bin*
+.cline-temp/

@@ -1,0 +1,11 @@
+{
+  "name": "DecisionFlow AI",
+  "tagline": "Turn meeting transcripts into structured decision and change logs.",
+  "description": "DecisionFlow AI reads a meeting transcript and extracts decisions, scope changes, pending decisions, risks, and timeline changes into a clean Markdown report. Ideal for sprint reviews, project kickoffs, and stakeholder syncs.",
+  "icon": "📊",
+  "color": "indigo",
+  "category": "productivity",
+  "taskTypes": ["summary", "doc"],
+  "requiredIntegrations": [],
+  "pricing": { "model": "free", "label": "Free" }
+}
