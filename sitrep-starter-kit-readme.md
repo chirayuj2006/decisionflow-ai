@@ -1,128 +1,77 @@
-# SitRep Agent Starter
+# DecisionFlow AI
 
-Build an agent for the [SitRep](https://joinsitrep.com) Agent Marketplace. SitRep's
-bot joins your meetings and turns them into tasks — your agent picks up a task and
-produces a draft (an email, a slide outline, a PRD, a research brief… your call).
+SitRep Hackathon Submission (Code Track)
 
-**You bring the LLM** (free local Ollama, or your own key). SitRep never charges you
-for tokens and never runs your code — it just calls your endpoint.
+Rescue critical decisions from messy transcripts. Instantly generate a strict, actionable changelog of scope, risks, and timelines.
 
-There are two ways to compete:
+## The Business Problem
 
-| | No-code | Code |
-|---|---|---|
-| Edit | just `prompt.txt` | `handler.py` |
-| Good for | prompt engineering, fast ideas | tools, multi-step, file generation, APIs |
-| Hosting | same for both — run locally + tunnel, or deploy free |
+The biggest problem with AI in meetings today is fluffy, paragraph-long summaries. When an engineering team misses a timeline change because it was buried inside generated text, it costs the company real money.
 
-> Can't host at all? You can also build a **Managed (no-code) agent** entirely in the
-> SitRep Studio — prompt only, SitRep runs it, no repo and no server needed. This
-> starter is for **Remote** agents (you host).
+DecisionFlow AI acts as a ruthless, automated project manager. It bypasses generic summarization and extracts a clean, structured changelog from messy, unstructured human conversations.
 
----
+It outputs a highly scannable Markdown checklist containing five strict parameters:
 
-## Quickstart (≈10 minutes)
+- Approved Decisions
+- Scope Changes
+- Pending Items
+- Risks Introduced
+- Timeline Changes
 
-```bash
-# 1. Get a free local LLM (skip if you'll BYOK)
-#    https://ollama.com  then:
-ollama pull llama3.1
+## Technical Architecture
 
-# 2. Configure
-cp .env.example .env        # defaults already point at local Ollama
+This agent was built for the Code Track to ensure maximum reliability and strict JSON outputs.
 
-# 3. Run it
-bash scripts/run-local.sh   # serves on http://localhost:9000
+- **Backend:** Python & FastAPI
+- **Intelligence:** OpenRouter API (`meta-llama/llama-3.1-8b-instruct`)
+- **Integration:** SitRep webhooks via local SSH tunneling (ngrok / localhost.run)
+- **Execution:** Heavily engineered system prompts to force the LLM to output pure JSON, bypassing conversational fluff
 
-# 4. Smoke-test (new terminal)
-bash scripts/smoke-test.sh  # prints generated artifacts
-```
+## Quickstart: Run it Locally
 
-Now make it yours: edit **`prompt.txt`** (no-code) or **`handler.py`** (code), then
-re-run the smoke test.
-
----
-
-## Connect it to SitRep
-
-1. In the SitRep **Studio**, create an agent and choose **Remote (host your own)**.
-2. Expose your local agent and paste the URL into **Endpoint URL**:
-   ```bash
-   bash scripts/tunnel.sh    # prints a public https URL (cloudflared)
-   ```
-3. Save — SitRep shows a **signing secret once**. Put it in `.env`:
-   ```
-   SITREP_AGENT_SECRET=whsec_...
-   ```
-   (restart the agent). Now SitRep's requests are verified.
-4. Hit **Test** in the Studio → you should see your artifact.
-5. **Publish** → your agent is in the Marketplace.
-
----
-
-## Examples
-
-Not sure where to start? Copy any handler in [`examples/`](examples/) over
-`handler.py` to begin from a working pattern — a multi-step slide outline,
-attendee-personalized emails, external-API research briefs, or `link` artifacts.
-Each one teaches a different SDK technique; see [`examples/README.md`](examples/README.md)
-for the full list.
+### 1. Clone & Setup
 
 ```bash
-cp examples/research_brief_handler.py handler.py   # then re-run the smoke test
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+cd YOUR_REPO_NAME
 ```
 
----
+### 2. Configure Environment Variables
 
-## The contract
+Create a `.env` file in the root directory based on the example:
 
-SitRep POSTs to `<your-url>/run` (and `/test` for the Studio button):
-
-```jsonc
-{
-  "task":     { "id": "...", "title": "...", "description": "..." },
-  "summary":  "the meeting summary",
-  "attendees":[ { "id": "...", "name": "..." } ],
-  "agent":    { "instructions": "your Studio prompt", "tools": [], "model": "llama3.1" }
-}
+```bash
+cp .env.example .env
 ```
 
-Respond with:
+Add your API keys to the `.env` file (e.g., your OpenRouter API key and your SitRep Agent Secret).
 
-```jsonc
-{ "artifacts": [ { "type": "markdown" | "html" | "link", "title": "...", "content": "..." } ],
-  "logs": ["optional"] }
+### 3. Run the Server
+
+Start the local FastAPI server:
+
+```bash
+bash scripts/run-local.sh
 ```
 
-`html` artifacts are sanitized by SitRep before display; `link` content must be a URL.
+This serves the app locally on port 9000.
 
-Requests are signed: header `X-SitRep-Signature: sha256=<hmac(secret, "<timestamp>.<body>")>`
-plus `X-SitRep-Timestamp`. `sitrep_agent/sdk.verify_signature()` checks this for you
-(and is skipped when `SITREP_AGENT_SECRET` is unset, for local dev).
+### 4. Expose the Tunnel
 
----
+In a new terminal window, expose your local server to the public web so SitRep can reach it:
 
-## Deploy (for your final submission)
-
-Tunnels die when your laptop sleeps — deploy to a free host so judges can reach you:
-
-- **Render**: push to GitHub → New ▸ Blueprint → this repo (`render.yaml` included). Set
-  `SITREP_AGENT_SECRET` + your LLM vars in the dashboard.
-- **Railway / Fly / any Docker host**: `Dockerfile` + `Procfile` included.
-
-Update the **Endpoint URL** in the Studio to your deployed URL.
-
----
-
-## Files
-
+```bash
+bash scripts/tunnel.sh
 ```
-app.py                  HTTP wrapper (don't edit) — /run /test /health + signature check
-handler.py              👈 YOUR LOGIC (or just edit prompt.txt)
-prompt.txt              👈 NO-CODE prompt
-agent.json              marketplace metadata
-sitrep_agent/sdk.py     signature verify + LLM client (don't edit)
-examples/               copy-over reference handlers (see examples/README.md)
-scripts/                run-local · tunnel · smoke-test
-Dockerfile · Procfile · render.yaml   deploy configs
+
+Copy the generated `https://` URL and paste it into the **Endpoint URL** field in your SitRep Agent Studio.
+
+## Testing the Agent
+
+You can simulate a SitRep webhook payload directly to ensure the JSON extraction is working. While the server is running, execute:
+
+```bash
+bash scripts/smoke-test.sh
 ```
+
+This will print the generated SitRep Markdown artifact directly in your terminal.
